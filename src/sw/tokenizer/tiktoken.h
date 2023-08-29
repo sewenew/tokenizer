@@ -17,7 +17,9 @@
 #ifndef SEWENEW_TOKENIZER_TIKTOKEN_H
 #define SEWENEW_TOKENIZER_TIKTOKEN_H
 
+#include <cctype>
 #include <limits>
+#include <fstream>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
@@ -25,6 +27,7 @@
 #include "re2/re2.h"
 #include "sw/tokenizer/base64.h"
 #include "sw/tokenizer/errors.h"
+#include "sw/tokenizer/str_utils.h"
 
 namespace sw::tokenizer {
 
@@ -32,6 +35,12 @@ class Tiktoken {
 public:
     using Encoder = std::unordered_map<std::string, uint64_t>;
     using Decoder = std::unordered_map<uint64_t, std::string>;
+
+    //inline static const std::string ENDOFTEXT = "<|endoftext|>";
+    //inline static const std::string FIM_PREFIX = "<|fim_prefix|>";
+    //inline static const std::string FIM_MIDDLE = "<|fim_middle|>";
+    //inline static const std::string FIM_SUFFIX = "<|fim_suffix|>";
+    //inline static const std::string ENDOFPROMPT = "<|endofprompt|>";
 
     Tiktoken(Encoder encoder,
             Encoder special_encoder,
@@ -334,6 +343,89 @@ private:
 
     Re2UPtr _regex;
     Re2UPtr _special_token_regex;
+};
+
+class TiktokenFactory {
+private:
+    struct Config {
+        std::string path;
+        Tiktoken::Encoder special_tokens;
+        std::string pattern;
+    };
+
+public:
+    explicit TiktokenFactory(const std::string &config) {
+        std::ifstream file(config);
+        if (!file) {
+            throw Error("failed to open config file: " + config);
+        }
+
+        std::string line;
+        while (std::getline(file, line)) {
+            line = str::trim(line);
+            if (line.empty()) {
+                continue;
+            }
+
+            if (line.front() == '#') {
+                continue;
+            }
+        }
+    }
+
+    Tiktoken create(const std::string &name) const {
+        auto iter = _encodings.find(name);
+        if (iter == _encodings.end()) {
+            throw Error("unknown name: " + name);
+        }
+
+        return _create(iter->second);
+    }
+
+private:
+    Tiktoken _create(const Config &config) const {
+        auto encoder = _load_encoder(config.path);
+
+        return Tiktoken(std::move(encoder), config.special_tokens, config.pattern);
+    }
+
+    Tiktoken::Encoder _load_encoder(const std::string &path) const {
+        std::ifstream file(path);
+        if (!file) {
+            throw Error("failed to open encoder file: " + path);
+        }
+
+        Tiktoken::Encoder encoder;
+        std::string line;
+        while (std::getline(file, line)) {
+            auto [token, rank] = _parse(line);
+
+            if (!encoder.emplace(std::move(token), rank).second) {
+                throw Error("duplicate item: " + line);
+            }
+        }
+
+        return ecnoder;
+    }
+
+    std::pair<std::string, uint64_t> _parse(const std::string &line) const {
+        auto pos = line.find(" ");
+        if (pos == std::string::npos) {
+            throw Error("invalid encoder line: " + line);
+        }
+
+        auto token = base64::decode({line.data(), pos});
+        uint64_t rank = 0;
+        try {
+            rank = std::stoul(line.substr(pos + 1));
+        } catch (const std::exception &) {
+            throw Error("invalid encoder rank: " + line);
+        }
+
+        return {std::move(token), rank};
+    }
+
+    std::unordered_map<std::string, Config> _encodings;
 };
 
 }
