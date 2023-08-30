@@ -18,6 +18,7 @@
 #define SEWENEW_TOKENIZER_TIKTOKEN_H
 
 #include <cctype>
+#include <cstdint>
 #include <limits>
 #include <fstream>
 #include <string>
@@ -27,7 +28,7 @@
 #include "re2/re2.h"
 #include "sw/tokenizer/base64.h"
 #include "sw/tokenizer/errors.h"
-#include "sw/tokenizer/str_utils.h"
+#include "sw/tokenizer/toml.h"
 
 namespace sw::tokenizer {
 
@@ -355,20 +356,10 @@ private:
 
 public:
     explicit TiktokenFactory(const std::string &config) {
-        std::ifstream file(config);
-        if (!file) {
-            throw Error("failed to open config file: " + config);
-        }
-
-        std::string line;
-        while (std::getline(file, line)) {
-            line = str::trim(line);
-            if (line.empty()) {
-                continue;
-            }
-
-            if (line.front() == '#') {
-                continue;
+        auto conf = Toml::parse(config);
+        for (auto &[name, value] : conf["encodings"].items()) {
+            if (!_encodings.emplace(name, _parse_config(*value)).second) {
+                throw Error("duplicate encoding conf");
             }
         }
     }
@@ -405,7 +396,7 @@ private:
             }
         }
 
-        return ecnoder;
+        return encoder;
     }
 
     std::pair<std::string, uint64_t> _parse(const std::string &line) const {
@@ -423,6 +414,15 @@ private:
         }
 
         return {std::move(token), rank};
+    }
+
+    Config _parse_config(const Toml &value) const {
+        Config conf;
+        conf.path = value["ranks"].get<std::string>();
+        conf.pattern = value["pattern"].get<std::string>();
+        conf.special_tokens = value["special_tokens"].get<std::unordered_map<std::string, uint64_t>>();
+
+        return conf;
     }
 
     std::unordered_map<std::string, Config> _encodings;

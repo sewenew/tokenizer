@@ -1,0 +1,68 @@
+[encodings.cl100k_base]
+pattern = '''(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+'''
+ranks = './data/cl100k_base.tiktoken'
+special_tokens = {'<|endoftext|>' = 100257, '<|fim_prefix|>' = 100258, '<|fim_middle|>' = 100259, '<|fim_suffix|>' = 100260, '<|endofprompt|>' = 100276}
+
+[encodings.p50k_base]
+pattern = ''''s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+'''
+ranks = 'p50k_base.tiktoken'
+special_tokens = {'<|endoftext|>' = 50256}
+
+[encodings.p50k_edit]
+pattern = ''''s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+'''
+ranks = 'p50k_base.tiktoken'
+special_tokens = {'<|endoftext|>' = 50256, '<|fim_prefix|>' = 50281, '<|fim_middle|>' = 50282, '<|fim_suffix|>' = 50283}
+
+[encodings.r50k_base]
+pattern = ''''s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+'''
+ranks = 'r50k_base.tiktoken'
+special_tokens = {'<|endoftext|>' = 50256}
+
+[model_prefix_to_encoding]
+# e.g., gpt-4-0314, etc., plus gpt-4-32k
+"gpt-4-" = "cl100k_base"
+# e.g, gpt-3.5-turbo-0301, -0401, etc.
+"gpt-3.5-turbo-" = "cl100k_base"
+# Azure deployment name
+"gpt-35-turbo" = "cl100k_base"
+
+[model_to_encoding]
+# chat
+"gpt-4" = "cl100k_base"
+"gpt-3.5-turbo" = "cl100k_base"
+# Azure deployment name
+"gpt-35-turbo" = "cl100k_base"
+# text
+"text-davinci-003" = "p50k_base"
+"text-davinci-002" = "p50k_base"
+"text-davinci-001" = "r50k_base"
+"text-curie-001" = "r50k_base"
+"text-babbage-001" = "r50k_base"
+"text-ada-001" = "r50k_base"
+"davinci" = "r50k_base"
+"curie" = "r50k_base"
+"babbage" = "r50k_base"
+"ada" = "r50k_base"
+# code
+"code-davinci-002" = "p50k_base"
+"code-davinci-001" = "p50k_base"
+"code-cushman-002" = "p50k_base"
+"code-cushman-001" = "p50k_base"
+"davinci-codex" = "p50k_base"
+"cushman-codex" = "p50k_base"
+# edit
+"text-davinci-edit-001" = "p50k_edit"
+"code-davinci-edit-001" = "p50k_edit"
+# embeddings
+"text-embedding-ada-002" = "cl100k_base"
+# old embeddings
+"text-similarity-davinci-001" = "r50k_base"
+"text-similarity-curie-001" = "r50k_base"
+"text-similarity-babbage-001" = "r50k_base"
+"text-similarity-ada-001" = "r50k_base"
+"text-search-davinci-doc-001" = "r50k_base"
+"text-search-curie-doc-001" = "r50k_base"
+"text-search-babbage-doc-001" = "r50k_base"
+"text-search-ada-doc-001" = "r50k_base"
+"code-search-babbage-code-001" = "r50k_base"
+"code-search-ada-code-001" = "r50k_base"
