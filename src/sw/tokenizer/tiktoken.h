@@ -20,7 +20,9 @@
 #include <cctype>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <fstream>
+#include <functional>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>

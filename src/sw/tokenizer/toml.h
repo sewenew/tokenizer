@@ -288,7 +288,7 @@ public:
         T container;
         if (const auto *p = std::get_if<Object>(&_value)) {
             for (const auto &[key, val] : *p) {
-                container.emplace(key, val.get<typename T::mapped_type>());
+                container.emplace(key, val.template get<typename T::mapped_type>());
             }
         } else {
             throw Error("type mismatch");
